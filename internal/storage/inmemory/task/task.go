@@ -38,10 +38,11 @@ func (ts *InMemoryTasksStorage) Update(task *types.Task) error {
 	for _, t := range ts.tasks {
 		if t.Id == task.Id {
 			t.Title = task.Title
+			return nil
 		}
 	}
 
-	return nil
+	return errors.New("Task not found")
 }
 
 func (ts *InMemoryTasksStorage) Save(task *types.Task) error {
@@ -75,9 +76,9 @@ func (ts *InMemoryTasksStorage) Delete(id string) error {
 	for i, task := range ts.tasks {
 		if task.Id == intId {
 			ts.tasks = append(ts.tasks[:i], ts.tasks[i+1:]...)
-			break
+			return nil
 		}
 	}
 
-	return nil
+	return errors.New("Task not found")
 }
