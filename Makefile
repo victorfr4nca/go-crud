@@ -4,5 +4,8 @@ run-api:
 build:
 	go build -o bin/main cmd/main.go
 
-test:
+test-verbose:
 	go test -v ./...
+
+test:
+	go test ./...

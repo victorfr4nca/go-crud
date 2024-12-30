@@ -1,16 +1,23 @@
 package main
 
 import (
+	"github.com/victorfr4nca/go-crud/internal/database"
 	"github.com/victorfr4nca/go-crud/internal/http"
-	task_handlers "github.com/victorfr4nca/go-crud/internal/http/handlers/task"
-	task_service "github.com/victorfr4nca/go-crud/internal/service/task"
-	task_storage "github.com/victorfr4nca/go-crud/internal/storage/inmemory/task"
+	task_handler "github.com/victorfr4nca/go-crud/internal/http/task"
+	"github.com/victorfr4nca/go-crud/internal/repository/task/sqlite"
+	"github.com/victorfr4nca/go-crud/internal/service/task"
 )
 
 func main() {
-	taskStorage := task_storage.NewInMemoryTasksStorage()
-	taskService := task_service.NewTaskService(taskStorage)
-	taskHandler := task_handlers.NewTaskHandlers(taskService)
+	// inMemoryTaskRepository := memory.New()
+	db, err := database.Init("crud.db")
+	if err != nil {
+		panic(err)
+	}
+
+	taskRepository := sqlite.New(db)
+	taskService := task.New(taskRepository)
+	taskHandler := task_handler.New(taskService)
 
 	server := http.NewServer(taskHandler)
 	server.WithPort(":3000")

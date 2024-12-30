@@ -2,25 +2,26 @@ package task
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 
-	"github.com/victorfr4nca/go-crud/internal/service"
-	"github.com/victorfr4nca/go-crud/internal/types"
+	"github.com/victorfr4nca/go-crud/internal/entity"
+	"github.com/victorfr4nca/go-crud/internal/service/task"
 )
 
-type TaskHandler struct {
-	taskService service.TaskService
+type Handler struct {
+	taskService task.Service
 }
 
-func NewTaskHandlers(taskService service.TaskService) *TaskHandler {
-	return &TaskHandler{
+func New(taskService task.Service) *Handler {
+	return &Handler{
 		taskService: taskService,
 	}
 }
 
-func (th *TaskHandler) GetHandler(w http.ResponseWriter, r *http.Request) {
+func (th *Handler) GetHandler(w http.ResponseWriter, r *http.Request) {
 	tasks, err := th.taskService.List()
 	if err != nil {
 		http.Error(w, "Failed to list tasks", http.StatusInternalServerError)
@@ -30,14 +31,14 @@ func (th *TaskHandler) GetHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(tasks)
 }
 
-func (th *TaskHandler) PostHandler(w http.ResponseWriter, r *http.Request) {
+func (th *Handler) PostHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 		return
 	}
 
-	task := &types.Task{}
+	task := &entity.Task{}
 
 	err = json.Unmarshal(body, &task)
 	if err != nil {
@@ -47,14 +48,14 @@ func (th *TaskHandler) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = th.taskService.Create(task)
 	if err != nil {
-		http.Error(w, "Failed to create task", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to create task: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 
 	json.NewEncoder(w).Encode(task)
 }
 
-func (th *TaskHandler) PatchHandler(w http.ResponseWriter, r *http.Request) {
+func (th *Handler) PatchHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	body, err := io.ReadAll(r.Body)
@@ -69,7 +70,7 @@ func (th *TaskHandler) PatchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task := &types.Task{
+	task := &entity.Task{
 		Id: intId,
 	}
 
@@ -88,7 +89,7 @@ func (th *TaskHandler) PatchHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(task)
 }
 
-func (th *TaskHandler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
+func (th *Handler) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	err := th.taskService.Delete(id)

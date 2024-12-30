@@ -3,17 +3,17 @@ package http
 import (
 	"net/http"
 
-	task_handlers "github.com/victorfr4nca/go-crud/internal/http/handlers/task"
+	"github.com/victorfr4nca/go-crud/internal/http/task"
 )
 
 type Server struct {
-	port         string
-	taskHandler *task_handlers.TaskHandler
+	port        string
+	taskHandler *task.Handler
 }
 
-func NewServer(taskHandler *task_handlers.TaskHandler) *Server {
+func NewServer(taskHandler *task.Handler) *Server {
 	return &Server{
-		port:         ":3000",
+		port:        ":3000",
 		taskHandler: taskHandler,
 	}
 }

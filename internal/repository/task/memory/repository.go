@@ -1,23 +1,25 @@
-package task
+package memory
 
 import (
 	"errors"
 	"math/rand"
 	"strconv"
+	"sync"
 
-	"github.com/victorfr4nca/go-crud/internal/storage"
-	"github.com/victorfr4nca/go-crud/internal/types"
+	"github.com/victorfr4nca/go-crud/internal/entity"
+	"github.com/victorfr4nca/go-crud/internal/repository/task"
 )
 
-type InMemoryTasksStorage struct {
-	tasks []*types.Task
+type Repository struct {
+	tasks []*entity.Task
+	sync.Mutex
 }
 
-var _ storage.TasksStorage = (*InMemoryTasksStorage)(nil)
+var _ task.Repository = (*Repository)(nil)
 
-func NewInMemoryTasksStorage() *InMemoryTasksStorage {
-	return &InMemoryTasksStorage{
-		tasks: []*types.Task{
+func New() *Repository {
+	return &Repository{
+		tasks: []*entity.Task{
 			{
 				Id:    1,
 				Title: "Task 1",
@@ -30,29 +32,33 @@ func NewInMemoryTasksStorage() *InMemoryTasksStorage {
 	}
 }
 
-func (ts *InMemoryTasksStorage) List() ([]*types.Task, error) {
+func (ts *Repository) List() ([]*entity.Task, error) {
 	return ts.tasks, nil
 }
 
-func (ts *InMemoryTasksStorage) Update(task *types.Task) error {
+func (ts *Repository) Update(task *entity.Task) error {
+	ts.Lock()
 	for _, t := range ts.tasks {
 		if t.Id == task.Id {
 			t.Title = task.Title
 			return nil
 		}
 	}
+	ts.Unlock()
 
 	return errors.New("Task not found")
 }
 
-func (ts *InMemoryTasksStorage) Save(task *types.Task) error {
+func (ts *Repository) Save(task *entity.Task) error {
 	task.Id = rand.Intn(100)
+	ts.Lock()
 	ts.tasks = append(ts.tasks, task)
+	ts.Unlock()
 
 	return nil
 }
 
-func (ts *InMemoryTasksStorage) Get(id string) (*types.Task, error) {
+func (ts *Repository) Get(id string) (*entity.Task, error) {
 	intId, err := strconv.Atoi(id)
 	if err != nil {
 		return nil, err
@@ -67,18 +73,20 @@ func (ts *InMemoryTasksStorage) Get(id string) (*types.Task, error) {
 	return nil, errors.New("Task not found")
 }
 
-func (ts *InMemoryTasksStorage) Delete(id string) error {
+func (ts *Repository) Delete(id string) error {
 	intId, err := strconv.Atoi(id)
 	if err != nil {
 		return err
 	}
 
+	ts.Lock()
 	for i, task := range ts.tasks {
 		if task.Id == intId {
 			ts.tasks = append(ts.tasks[:i], ts.tasks[i+1:]...)
 			return nil
 		}
 	}
+	ts.Unlock()
 
 	return errors.New("Task not found")
 }

@@ -1,4 +1,4 @@
-package types
+package entity
 
 type Task struct {
 	Id    int    `json:"id"`
